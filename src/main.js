@@ -3,6 +3,15 @@ import App from './App.vue'
 import router from './router'
 import './styles/index.less'
 
+// 加载ElementUI组件库
+import ElementUI from 'element-ui'
+
+// 加载ElementUI组件库样式
+import 'element-ui/lib/theme-chalk/index.css'
+
+// 全局注册ElementUI组件库
+Vue.use(ElementUI)
+
 Vue.config.productionTip = false
 
 new Vue({
