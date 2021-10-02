@@ -96,7 +96,12 @@ export default {
           message: '登录成功！',
           type: 'success'
         })
+
         this.loginLoading = false
+
+        this.$router.push({
+          name: 'home'
+        })
       }).catch(err => {
         console.log('登录失败\n', err)
         this.$message.error('登录失败，账号或验证码错误！')
