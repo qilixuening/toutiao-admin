@@ -5,12 +5,13 @@
     text-color="#fff"
     active-text-color="#ffd04b"
     router
+    :collapse="isCollapsed"
   >
     <el-menu-item index="/">
       <i class="el-icon-s-home"></i>
       <span slot="title">首页</span>
     </el-menu-item>
-    <el-menu-item index="article">
+    <el-menu-item index="/articles">
       <i class="el-icon-menu"></i>
       <span slot="title">内容管理</span>
     </el-menu-item>
@@ -42,7 +43,7 @@
 export default {
   name: 'NavAside',
   components: {},
-  props: {},
+  props: ['is-collapsed'],
   data: () => ({
 
   }),

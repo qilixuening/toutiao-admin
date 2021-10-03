@@ -2,26 +2,30 @@
   <el-container class="layout-container">
     <el-aside
       class="aside"
-      width="200px"
+      width="auto"
     >
       <nav-aside
         class="nav-aside-menu"
+        :is-collapsed="isCollapsed"
       ></nav-aside>
     </el-aside>
     <el-container>
       <el-header class="header">
         <div>
-          <i class="el-icon-s-fold"></i>
+          <i
+            :class="foldingStatus"
+            @click="toggleCollapsed"
+          ></i>
           <span>欢迎进入个人空间</span>
         </div>
         <el-dropdown>
           <span class="el-dropdown-link">
             <img
               class="avatar"
-              src="https://tva3.sinaimg.cn/crop.0.0.799.799.1024/ed955329jw8f7lfpfzhblj20m80m7jtp.jpg"
+              :src="user.photo"
               alt=""
             >
-            <strong>某某用户</strong>
+            <strong>{{ user.name }}</strong>
             <i class="el-icon-arrow-down el-icon--right"></i>
           </span>
           <el-dropdown-menu slot="dropdown">
@@ -30,6 +34,7 @@
             >个人设置</el-dropdown-item>
             <el-dropdown-item
               class="el-icon-circle-close"
+              @click.native="onLogout"
             >退出登录</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
@@ -43,6 +48,7 @@
 
 <script>
 import NavAside from './components/aside.vue'
+import { getUserProfile } from '@/api/user.js'
 
 export default {
   name: 'LayoutIndex',
@@ -51,13 +57,48 @@ export default {
   },
   props: {},
   data: () => ({
-
+    user: {},
+    isCollapsed: false
   }),
-  computed: {},
+  computed: {
+    foldingStatus () {
+      return {
+        'el-icon-s-unfold': this.isCollapsed,
+        'el-icon-s-fold': !this.isCollapsed
+      }
+    }
+  },
   watch: {},
-  created () {},
+  created () {
+    this.loadUserProfile()
+  },
   mounted () {},
-  methods: {}
+  methods: {
+    loadUserProfile () {
+      getUserProfile().then(res => {
+        this.user = res.data.data
+      })
+    },
+
+    toggleCollapsed () {
+      this.isCollapsed = !this.isCollapsed
+    },
+    onLogout () {
+      this.$confirm('是否确定退出？', '登出提示', {
+        conformButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        window.localStorage.removeItem('user')
+        this.$router.push('/login')
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消退出'
+        })
+      })
+    }
+  }
 }
 </script>
 
@@ -71,7 +112,6 @@ export default {
 
     .aside {
         // background-color: #d3dce6;
-
         .nav-aside-menu {
           height: 100%;
         }
@@ -83,6 +123,10 @@ export default {
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #ccc;
+      i {
+        margin-right: 5px;
+        cursor: pointer;
+      }
       .el-dropdown-link {
         cursor: pointer;
         color: gray;

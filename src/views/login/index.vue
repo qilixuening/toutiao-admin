@@ -29,7 +29,7 @@
           type="primary"
           :loading="loginLoading"
           @click="onLogin('login-form')"
-        >立即创建</el-button>
+        >登录</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -44,8 +44,8 @@ export default {
   props: {},
   data: () => ({
     user: {
-      mobile: '',
-      code: '',
+      mobile: '13911111111',
+      code: '246810',
       checked: false
     },
 
@@ -98,6 +98,8 @@ export default {
         })
 
         this.loginLoading = false
+
+        window.localStorage.setItem('user', JSON.stringify(res.data.data))
 
         this.$router.push({
           name: 'home'

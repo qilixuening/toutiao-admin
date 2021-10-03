@@ -7,3 +7,10 @@ export const userLogin = data => {
     data
   })
 }
+
+export const getUserProfile = () => {
+  return request({
+    method: 'GET',
+    url: 'mp/v1_0/user/profile'
+  })
+}
