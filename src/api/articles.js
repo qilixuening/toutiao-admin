@@ -7,3 +7,10 @@ export const getUserArticles = params => {
     params
   })
 }
+
+export const getChannels = () => {
+  return request({
+    method: 'GET',
+    url: 'mp/v1_0/channels'
+  })
+}

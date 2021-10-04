@@ -16,22 +16,27 @@
         size="mini"
       >
         <el-form-item label="状态">
-          <el-radio-group v-model="form.resource">
-            <el-radio label="全部"></el-radio>
-            <el-radio label="草稿"></el-radio>
-            <el-radio label="待审核"></el-radio>
-            <el-radio label="审核通过"></el-radio>
-            <el-radio label="审核失败"></el-radio>
-            <el-radio label="已删除"></el-radio>
+          <el-radio-group v-model="query.status">
+            <el-radio :label="null">全部</el-radio>
+            <el-radio :label="0">草稿</el-radio>
+            <el-radio :label="1">待审核</el-radio>
+            <el-radio :label="2">审核通过</el-radio>
+            <el-radio :label="3">审核失败</el-radio>
+            <el-radio :label="4">已删除</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="频道">
           <el-select
-            v-model="form.region"
-            placeholder="请选择频道"
+            v-model="query.channel"
+            placeholder="全部"
           >
-            <el-option label="区域一" value="shanghai"></el-option>
-            <el-option label="区域二" value="beijing"></el-option>
+            <el-option
+              :label="ch.name"
+              :value="ch.id"
+              v-for="ch in channelInfo"
+              :key="ch.id"
+            >
+            </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="日期">
@@ -44,14 +49,14 @@
           </el-date-picker>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSubmit">查询</el-button>
+          <el-button type="primary" @click="loadUserArticles(1)">查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <span>共筛选到n条结果：</span>
+        <span>共筛选到{{ totalCount }}条结果：</span>
       </div>
 
       <el-table
@@ -60,8 +65,21 @@
         size="mini"
         stripe>
         <el-table-column
-          prop="coverrrrr"
-          label="封面">
+          label="封面"
+          width="100">
+          <template slot-scope="scope">
+            <el-image
+              style="width: 50px; height: 50px"
+              fit="cover"
+              referrer-policy="strict-origin"
+              :src="scope.row.cover.images[0]"
+              lazy
+            >
+              <div slot="error">
+                <i class="el-icon-picture-outline"></i>
+              </div>
+            </el-image>
+          </template>
         </el-table-column>
         <el-table-column
           prop="title"
@@ -69,7 +87,8 @@
         </el-table-column>
         <el-table-column
           prop="pubdate"
-          label="发布时间">
+          label="发布时间"
+          width="200">
         </el-table-column>
         <el-table-column
           label="状态"
@@ -108,8 +127,10 @@
       <el-pagination
         layout="prev, pager, next"
         class="pagination"
-        :total="1000"
+        :total="totalCount"
+        :page-size="pageSize"
         background
+        @current-change="onCurrentChange"
       >
       </el-pagination>
     </el-card>
@@ -118,7 +139,7 @@
 </template>
 
 <script>
-import { getUserArticles } from '@/api/articles.js'
+import { getUserArticles, getChannels } from '@/api/articles.js'
 
 export default {
   name: 'ArticlesIndex',
@@ -138,28 +159,47 @@ export default {
 
     articles: [],
 
+    totalCount: 0,
+    pageSize: 10,
+    query: {
+      status: null,
+      channel: null
+    },
+
     statusInfo: {
       0: { text: '草稿', type: 'info' },
       1: { text: '待审核', type: '' },
       2: { text: '审核通过', type: 'success' },
       3: { text: '审核失败', type: 'warning' },
       4: { text: '已删除', type: 'danger' }
-    }
+    },
+
+    channelInfo: {}
   }),
   computed: {},
   watch: {},
   created () {
-    this.loadUserArticles()
+    this.loadUserArticles(1)
+    this.loadChannels()
   },
   mounted () {},
   methods: {
-    onSubmit () {
-      console.log('submit!')
+    loadUserArticles (page = 1) {
+      getUserArticles({
+        page,
+        per_page: this.pageSize,
+        status: this.query.status,
+        channel_id: this.query.channel
+      }).then(res => {
+        const { results, total_count: totalCount } = res.data.data
+        this.articles = results
+        this.totalCount = totalCount
+      })
     },
 
-    loadUserArticles () {
-      getUserArticles().then(res => {
-        this.articles = res.data.data.results
+    loadChannels () {
+      getChannels().then(res => {
+        this.channelInfo = res.data.data.channels
       })
     },
 
@@ -169,6 +209,10 @@ export default {
 
     handleDelete (index, row) {
       console.log(index, row)
+    },
+
+    onCurrentChange (page) {
+      this.loadUserArticles(page)
     }
   }
 }
