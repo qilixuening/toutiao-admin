@@ -176,7 +176,7 @@ export default {
       4: { text: '已删除', type: 'danger' }
     },
 
-    channelInfo: {}
+    channelInfo: []
   }),
   computed: {
     pubdateRange () {
