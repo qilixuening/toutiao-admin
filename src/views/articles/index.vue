@@ -10,8 +10,8 @@
       </div>
 
       <el-form
-        ref="form"
-        :model="form"
+        ref="queryForm"
+        :model="query"
         label-width="40px"
         size="mini"
       >
@@ -41,15 +41,20 @@
         </el-form-item>
         <el-form-item label="日期">
           <el-date-picker
-            v-model="form.date1"
-            type="datetimerange"
+            v-model="query.dateRange"
+            type="daterange"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            :default-time="['12:00:00']">
+            range-separator="至"
+            value-format="yyyy-MM-dd">
           </el-date-picker>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="loadUserArticles(1)">查询</el-button>
+          <el-button
+            type="primary"
+            :disabled="loading"
+            @click="loadUserArticles(1)"
+          >查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -61,6 +66,7 @@
 
       <el-table
         :data="articles"
+        v-loading="loading"
         style="width: 100%"
         size="mini"
         stripe>
@@ -118,7 +124,8 @@
               icon="el-icon-delete"
               circle
               plain
-              @click="handleDelete(scope.$index, scope.row)">
+              :id="scope.row.id"
+              @click="onDeleteArticle(scope.row.id)">
             </el-button>
           </template>
         </el-table-column>
@@ -129,8 +136,10 @@
         class="pagination"
         :total="totalCount"
         :page-size="pageSize"
+        :disabled="loading"
+        :current-page.sync="page"
         background
-        @current-change="onCurrentChange"
+        @current-change="onPageChange"
       >
       </el-pagination>
     </el-card>
@@ -139,31 +148,24 @@
 </template>
 
 <script>
-import { getUserArticles, getChannels } from '@/api/articles.js'
+import { getUserArticles, getChannels, deleteUserArticle } from '@/api/articles.js'
 
 export default {
   name: 'ArticlesIndex',
   components: {},
   props: {},
   data: () => ({
-    form: {
-      name: '',
-      region: '',
-      date1: '',
-      date2: '',
-      delivery: false,
-      type: [],
-      resource: '',
-      desc: ''
-    },
+    loading: true,
 
     articles: [],
 
     totalCount: 0,
     pageSize: 10,
+    page: 1,
     query: {
       status: null,
-      channel: null
+      channel: null,
+      dateRange: []
     },
 
     statusInfo: {
@@ -176,7 +178,15 @@ export default {
 
     channelInfo: {}
   }),
-  computed: {},
+  computed: {
+    pubdateRange () {
+      if (this.query.dateRange == null) {
+        return []
+      } else {
+        return this.query.dateRange
+      }
+    }
+  },
   watch: {},
   created () {
     this.loadUserArticles(1)
@@ -185,15 +195,21 @@ export default {
   mounted () {},
   methods: {
     loadUserArticles (page = 1) {
+      this.loading = true
+
       getUserArticles({
         page,
         per_page: this.pageSize,
         status: this.query.status,
-        channel_id: this.query.channel
+        channel_id: this.query.channel,
+        begin_pubdate: this.pubdateRange[0],
+        end_pubdate: this.pubdateRange[1]
       }).then(res => {
         const { results, total_count: totalCount } = res.data.data
         this.articles = results
         this.totalCount = totalCount
+
+        this.loading = false
       })
     },
 
@@ -207,12 +223,36 @@ export default {
       console.log(index, row)
     },
 
-    handleDelete (index, row) {
-      console.log(index, row)
+    onPageChange (page) {
+      this.loadUserArticles(page)
     },
 
-    onCurrentChange (page) {
-      this.loadUserArticles(page)
+    onDeleteArticle (articleId) {
+      this.$confirm('是否确定删除？', '删除提示', {
+        conformButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteUserArticle(articleId).then(res => {
+          if (res.status === 204) {
+            this.$message({
+              type: 'success',
+              message: '删除成功！'
+            })
+            this.loadUserArticles(this.page)
+          } else {
+            this.$message({
+              type: 'error',
+              message: '删除失败！'
+            })
+          }
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消操作'
+        })
+      })
     }
   }
 }
