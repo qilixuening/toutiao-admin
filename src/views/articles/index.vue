@@ -117,7 +117,7 @@
               icon="el-icon-edit"
               circle
               plain
-              @click="handleEdit(scope.$index, scope.row)">
+              @click="$router.push('/publish?id='+scope.row.id)">
             </el-button>
             <el-button
               type="danger"

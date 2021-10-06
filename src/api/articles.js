@@ -33,3 +33,22 @@ export const publishArticle = (data, draft = false) => {
     data
   })
 }
+
+export const getArticle = articleId => {
+  return request({
+    method: 'GET',
+    url: `mp/v1_0/articles/${articleId}`
+  })
+}
+
+export const updateArticle = (articleId, data, draft = false) => {
+  return request({
+    method: 'PUT',
+    url: `mp/v1_0/articles/${articleId}`,
+    params: {
+      // 用于指定是否存为草稿
+      draft
+    },
+    data
+  })
+}

@@ -4,7 +4,7 @@
       <div slot="header" class="clearfix">
         <el-breadcrumb separator-class="el-icon-arrow-right">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item>发布文章</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ $route.query.id ? '编辑' : '发布' }}文章</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
 
@@ -39,7 +39,7 @@
           >
             <el-option
               :label="ch.name"
-              :value="ch.id"
+              :value="+ch.id"
               v-for="ch in channelInfo"
               :key="ch.id"
             >
@@ -63,7 +63,12 @@
 </template>
 
 <script>
-import { getChannels, publishArticle } from '@/api/articles.js'
+import {
+  getChannels,
+  publishArticle,
+  getArticle,
+  updateArticle
+} from '@/api/articles.js'
 
 export default {
   name: 'PublishIndex',
@@ -79,7 +84,7 @@ export default {
         type: 0,
         images: []
       },
-      channel_id: null
+      channel_id: 2
     },
 
     channelInfo: []
@@ -88,6 +93,10 @@ export default {
   watch: {},
   created () {
     this.loadChannels()
+
+    if (this.$route.query.id) {
+      this.LoadArticle()
+    }
   },
   mounted () {},
   methods: {
@@ -97,17 +106,34 @@ export default {
       })
     },
 
-    onSubmit (isCraft = false) {
+    onSubmit (isDraft = false) {
       this.loading = true
 
-      publishArticle(this.form, isCraft).then(res => {
-        this.$message({
-          type: 'success',
-          message: isCraft ? '已存为草稿' : '发布成功'
+      const articleId = this.$route.query.id
+      if (articleId) {
+        updateArticle(articleId, this.form, isDraft).then(res => {
+          this.$message({
+            type: 'success',
+            message: isDraft ? '变更已存入草稿' : '修改成功'
+          })
+          this.$router.push('/articles')
         })
-      })
-
+      } else {
+        publishArticle(this.form, isDraft).then(res => {
+          this.$message({
+            type: 'success',
+            message: isDraft ? '已存为草稿' : '发布成功'
+          })
+          this.$router.push('/articles')
+        })
+      }
       this.loading = false
+    },
+
+    LoadArticle () {
+      getArticle(this.$route.query.id).then(res => {
+        this.form = res.data.data
+      })
     }
   }
 }
