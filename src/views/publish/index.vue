@@ -9,22 +9,26 @@
       </div>
 
       <el-form
-        ref="form"
+        ref="pubForm"
         :model="form"
-        label-width="40px"
+        :rules="formRules"
+        label-width="60px"
       >
-        <el-form-item label="标题">
+        <el-form-item label="标题" prop="title">
           <el-input
             v-model="form.title">
           </el-input>
         </el-form-item>
-        <el-form-item label="正文">
-          <el-input
-            type="textarea"
+        <el-form-item label="正文" prop="content">
+          <el-tiptap
+            height="400px"
+            placeholder="请在此输入内容"
+            lang="zh"
+            :extensions="extensions"
             v-model="form.content">
-          </el-input>
+          </el-tiptap>
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item label="封面">
           <el-radio-group v-model="form.cover.type">
             <el-radio :label="1">单图</el-radio>
             <el-radio :label="3">三图</el-radio>
@@ -32,7 +36,7 @@
             <el-radio :label="-1">自动</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="频道">
+        <el-form-item label="频道" prop="channel_id">
           <el-select
             v-model="form.channel_id"
             placeholder="请选择"
@@ -70,9 +74,37 @@ import {
   updateArticle
 } from '@/api/articles.js'
 
+import { uploadImage } from '@/api/images.js'
+
+import {
+  ElementTiptap,
+  Doc,
+  Text,
+  Paragraph,
+  Heading,
+  Bold,
+  Underline,
+  Italic,
+  Strike,
+  ListItem,
+  BulletList,
+  OrderedList,
+  Link,
+  Image,
+  CodeBlock,
+  Blockquote,
+  TextAlign,
+  Indent,
+  HorizontalRule,
+  Fullscreen
+} from 'element-tiptap'
+import 'element-tiptap/lib/index.css'
+
 export default {
   name: 'PublishIndex',
-  components: {},
+  components: {
+    'el-tiptap': ElementTiptap
+  },
   props: {},
   data: () => ({
     loading: false,
@@ -84,10 +116,61 @@ export default {
         type: 0,
         images: []
       },
-      channel_id: 2
+      channel_id: null
     },
 
-    channelInfo: []
+    formRules: {
+      title: [
+        { required: true, message: '标题不能为空', trigger: 'change' },
+        { min: 5, max: 30, message: '标题长度为5~30个字符', trigger: 'blur' }
+      ],
+      content: [
+        { required: true, message: '正文内容不能为空', trigger: 'blur' },
+        {
+          validator: (_, value, callback) => {
+            if (value === '<p></p>') {
+              callback(new Error('正文内容不能为空'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
+      ],
+      channel_id: [
+        { required: true, message: '请选择文章所属频道' }
+      ]
+    },
+
+    channelInfo: [],
+
+    extensions: [
+      new Doc(),
+      new Text(),
+      new Paragraph(),
+      new Heading({ level: 3 }),
+      new Bold(),
+      new Underline(),
+      new Italic(),
+      new Strike(),
+      new ListItem(),
+      new BulletList(),
+      new OrderedList(),
+      new Link(),
+      new Image({
+        uploadRequest (file) {
+          const fd = new FormData()
+          fd.append('image', file)
+          return uploadImage(fd).then(res => res.data.data.url)
+        }
+      }),
+      new CodeBlock(),
+      new Blockquote(),
+      new TextAlign({ bubble: true, menubar: false }),
+      new Indent(),
+      new HorizontalRule(),
+      new Fullscreen()
+    ]
   }),
   computed: {},
   watch: {},
@@ -107,27 +190,31 @@ export default {
     },
 
     onSubmit (isDraft = false) {
-      this.loading = true
+      this.$refs.pubForm.validate(valid => {
+        if (!valid) return
 
-      const articleId = this.$route.query.id
-      if (articleId) {
-        updateArticle(articleId, this.form, isDraft).then(res => {
-          this.$message({
-            type: 'success',
-            message: isDraft ? '变更已存入草稿' : '修改成功'
+        this.loading = true
+
+        const articleId = this.$route.query.id
+        if (articleId) {
+          updateArticle(articleId, this.form, isDraft).then(res => {
+            this.$message({
+              type: 'success',
+              message: isDraft ? '变更已存入草稿' : '修改成功'
+            })
+            this.$router.push('/articles')
           })
-          this.$router.push('/articles')
-        })
-      } else {
-        publishArticle(this.form, isDraft).then(res => {
-          this.$message({
-            type: 'success',
-            message: isDraft ? '已存为草稿' : '发布成功'
+        } else {
+          publishArticle(this.form, isDraft).then(res => {
+            this.$message({
+              type: 'success',
+              message: isDraft ? '已存为草稿' : '发布成功'
+            })
+            this.$router.push('/articles')
           })
-          this.$router.push('/articles')
-        })
-      }
-      this.loading = false
+        }
+        this.loading = false
+      })
     },
 
     LoadArticle () {
