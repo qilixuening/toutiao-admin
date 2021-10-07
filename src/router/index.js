@@ -5,6 +5,7 @@ import Layout from '@/views/layout/'
 import Home from '@/views/home/'
 import Articles from '@/views/articles/'
 import Publish from '@/views/publish/'
+import Images from '@/views/images/'
 
 Vue.use(VueRouter)
 
@@ -27,6 +28,11 @@ const routes = [
         path: '/articles',
         name: 'articles',
         component: Articles
+      },
+      {
+        path: '/images',
+        name: 'images',
+        component: Images
       },
       {
         path: '/publish',
