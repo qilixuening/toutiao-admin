@@ -8,6 +8,7 @@ import Publish from '@/views/publish/'
 import Images from '@/views/images/'
 import Comments from '@/views/comments/'
 import Settings from '@/views/settings/'
+import Fans from '@/views/fans/'
 
 Vue.use(VueRouter)
 
@@ -50,6 +51,11 @@ const routes = [
         path: '/settings',
         name: 'settings',
         component: Settings
+      },
+      {
+        path: '/fans',
+        name: 'fans',
+        component: Fans
       }
     ]
   }

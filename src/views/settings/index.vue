@@ -47,8 +47,9 @@
               <el-button
                 type="primary"
                 :loading="loading"
+                :disabled="isDifferent"
                 @click="changeUserProfile"
-              >保存</el-button>
+              >修改</el-button>
             </el-form-item>
           </el-form>
         </el-col>
@@ -88,25 +89,29 @@
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确定</el-button>
+        <el-button
+          type="primary"
+          :loading="avatarLoading"
+          @click="onAvatarReady"
+        >确定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { getUserProfile, setUserProfile } from '@/api/user.js'
+import { getUserProfile, setUserProfile, setUserAvatar } from '@/api/user.js'
+import globalBus from '@/utils/bus.js'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 
 export default {
-  loading: false,
-
   name: 'SettingsIndex',
   components: {},
   props: {},
   data: () => ({
     loading: false,
+    avatarLoading: false,
 
     user: {
       id: '',
@@ -120,7 +125,7 @@ export default {
     formRules: {
       name: [
         { required: true, message: '昵称不能为空', trigger: 'change' },
-        { min: 3, max: 10, message: '昵称为3~10个字符', trigger: 'blur' }
+        { min: 1, max: 7, message: '昵称为1~7个字', trigger: 'blur' }
       ],
       intro: [
         { required: true, message: '请输入个人简介', trigger: 'change' },
@@ -132,12 +137,20 @@ export default {
       ]
     },
 
+    userInitials: '',
+
     dialogVisible: false,
     previewAvatarUrl: '',
 
-    cropper: undefined
+    cropper: undefined,
+
+    disabled: true
   }),
-  computed: {},
+  computed: {
+    isDifferent () {
+      return this.userInitials === JSON.stringify(this.user)
+    }
+  },
   watch: {},
   created () {
     this.loadUserProfile()
@@ -148,13 +161,19 @@ export default {
     loadUserProfile () {
       getUserProfile().then(res => {
         this.user = res.data.data
+
+        this.userInitials = JSON.stringify(this.user)
       })
     },
 
     changeUserProfile () {
       this.loading = true
       setUserProfile(this.user).then(res => {
-        this.loading = true
+        this.loading = false
+        this.userInitials = JSON.stringify(this.user)
+
+        globalBus.$emit('set-user-name', this.user.name)
+
         this.$message({
           type: 'success',
           message: '个人信息修改成功'
@@ -174,20 +193,41 @@ export default {
     onDialogOpened () {
       if (!this.cropper) {
         this.cropper = new Cropper(this.$refs.cropImage, {
-          aspectRatio: 16 / 9,
-          crop (event) {
-            console.log(event.detail.x)
-            console.log(event.detail.y)
-            console.log(event.detail.width)
-            console.log(event.detail.height)
-            console.log(event.detail.rotate)
-            console.log(event.detail.scaleX)
-            console.log(event.detail.scaleY)
-          }
+          aspectRatio: 1,
+          viewMode: 1,
+          dragMode: 'none',
+          modal: false,
+          guides: false,
+          rotatable: false,
+          cropBoxResizable: false
         })
       } else {
         this.cropper.replace(this.previewAvatarUrl)
       }
+    },
+
+    onAvatarReady () {
+      this.avatarLoading = true
+      this.cropper.getCroppedCanvas().toBlob(blob => {
+        const fd = new FormData()
+        fd.append('photo', blob)
+
+        setUserAvatar(fd).then(res => {
+          this.avatarLoading = false
+          this.dialogVisible = false
+
+          this.user.photo = window.URL.createObjectURL(blob)
+          this.userInitials = JSON.stringify(this.user)
+
+          globalBus.$emit('set-user-photo', this.user.photo)
+        }).catch(() => {
+          this.avatarLoading = false
+          this.$message({
+            type: 'error',
+            message: '上传失败，请重新提交！'
+          })
+        })
+      })
     }
   }
 }

@@ -31,6 +31,7 @@
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item
               class="el-icon-setting"
+              @click.native="$router.push('/settings')"
             >个人设置</el-dropdown-item>
             <el-dropdown-item
               class="el-icon-circle-close"
@@ -49,6 +50,7 @@
 <script>
 import NavAside from './components/aside.vue'
 import { getUserProfile } from '@/api/user.js'
+import globalBus from '@/utils/bus.js'
 
 export default {
   name: 'LayoutIndex',
@@ -72,7 +74,15 @@ export default {
   created () {
     this.loadUserProfile()
   },
-  mounted () {},
+  mounted () {
+    globalBus.$on('set-user-name', (name) => {
+      this.user.name = name
+    })
+
+    globalBus.$on('set-user-photo', (photo) => {
+      this.user.photo = photo
+    })
+  },
   methods: {
     loadUserProfile () {
       getUserProfile().then(res => {

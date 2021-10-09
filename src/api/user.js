@@ -15,10 +15,18 @@ export const getUserProfile = () => {
   })
 }
 
-export const setUserProfile = userData => {
+export const setUserProfile = data => {
   return request({
-    method: 'POST',
+    method: 'PATCH',
     url: 'mp/v1_0/user/profile',
-    data: userData
+    data
+  })
+}
+
+export const setUserAvatar = formData => {
+  return request({
+    method: 'PATCH',
+    url: 'mp/v1_0/user/photo',
+    data: formData
   })
 }
