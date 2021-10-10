@@ -22,12 +22,19 @@
       <el-tabs
         v-model="activeTab"
         type="card"
-        @tab-click="handleClick"
+        @tab-click="tabClick"
       >
         <el-tab-pane
           label="素材"
           name="images"
-        >素材管理页面
+        >
+          <image-list
+            ref="imageList"
+            :isShowUpload="false"
+            :isShowBar="false"
+            @input="onSelected"
+          >
+          </image-list>
         </el-tab-pane>
         <el-tab-pane
           label="上传"
@@ -61,10 +68,13 @@
 
 <script>
 import { uploadImage } from '@/api/images/'
+import ImageList from '@/components/imageList.vue'
 
 export default {
   name: 'ArticleCover',
-  components: {},
+  components: {
+    ImageList
+  },
   props: ['value'],
   data: () => ({
     dialogVisible: false,
@@ -84,8 +94,8 @@ export default {
         .catch(_ => {})
     },
 
-    handleClick (tab, event) {
-      // console.log(tab, event)
+    tabClick (tab, event) {
+      this.coverPreparing = true
     },
 
     onFileChange () {
@@ -94,16 +104,26 @@ export default {
       this.coverPreparing = false
     },
 
-    onCoverConfirm () {
-      const file = this.$refs.imgFile.files[0]
-      const fd = new FormData()
-      fd.append('image', file)
-      uploadImage(fd).then(res => {
-        this.coverPreparing = true
-        this.dialogVisible = false
+    onSelected (select) {
+      this.coverPreparing = (select === null)
+    },
 
-        this.$emit('input', res.data.data.url)
-      })
+    onCoverConfirm () {
+      if (this.activeTab === 'upload') {
+        const file = this.$refs.imgFile.files[0]
+        const fd = new FormData()
+        fd.append('image', file)
+        uploadImage(fd).then(res => {
+          this.coverPreparing = true
+          this.dialogVisible = false
+
+          this.$emit('input', res.data.data.url)
+        })
+      } else {
+        this.dialogVisible = false
+        const index = this.$refs.imageList.selected
+        this.$emit('input', this.$refs.imageList.images[index].url)
+      }
     }
   }
 }

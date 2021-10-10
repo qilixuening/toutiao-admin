@@ -9,6 +9,7 @@
       <el-radio-button :label="true">收藏</el-radio-button>
     </el-radio-group>
     <el-button
+      v-if="isShowUpload"
       style="float: right"
       type="success"
       size="mini"
@@ -24,17 +25,21 @@
         :md="6"
         :lg="4"
         :xl="3"
-        v-for="img in images"
+        v-for="(img, index) in images"
         :key="img.id"
+        @click.native="onSelectCover(index)"
       >
         <el-image
-          style="height: 200px"
+          style="height: 200px; width: 100%"
           :src="img.url"
           fit="cover"
           lazy
         >
         </el-image>
-        <div class="img-bar">
+        <div
+          v-if="isShowBar"
+          class="img-bar"
+        >
           <el-button
             class="op-button"
             type="plain"
@@ -53,6 +58,11 @@
             @click="onDeleteImage(img)"
           >
           </el-button>
+        </div>
+        <div v-else-if="selected===index"
+          class="img-radio"
+        >
+          <i class="el-icon-success"></i>
         </div>
       </el-col>
     </el-row>
@@ -98,7 +108,16 @@ import { getUserImages, alterImageInfo, deleteImage } from '@/api/images'
 export default {
   name: 'ImageList',
   components: {},
-  props: {},
+  props: {
+    isShowUpload: {
+      type: Boolean,
+      default: true
+    },
+    isShowBar: {
+      type: Boolean,
+      default: true
+    }
+  },
   data: () => ({
     loading: false,
 
@@ -112,7 +131,9 @@ export default {
     pageSize: 24,
     totalCount: 0,
 
-    images: []
+    images: [],
+
+    selected: null
   }),
   computed: {},
   watch: {},
@@ -123,6 +144,9 @@ export default {
   methods: {
     loadUserImages (page = 1) {
       this.loading = true
+
+      this.selected = null
+      this.$emit('input', this.selected)
 
       this.page = page
       getUserImages({
@@ -180,6 +204,11 @@ export default {
       deleteImage(img.id).then(res => {
         this.loadUserImages(this.page)
       })
+    },
+
+    onSelectCover (index) {
+      this.selected = index
+      this.$emit('input', this.selected)
     }
   }
 }
@@ -207,6 +236,19 @@ export default {
         font-size: 18px;
         color: rgb(235, 233, 233);
       }
+    }
+
+    .img-radio {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      font-size: 40px;
+      color: #67C23A;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
     }
   }
 
