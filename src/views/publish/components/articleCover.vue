@@ -1,10 +1,18 @@
 <template>
   <span>
-    <i
-      class="el-icon-plus"
-      @click="dialogVisible=true"
+    <el-image
+      class="upload-span"
+      fit="cover"
+      :src="value"
+      @click.native="dialogVisible=true"
     >
-    </i>
+      <div slot="placeholder">
+        <i class="el-icon-loading"></i>
+      </div>
+      <div slot="error">
+        <i class="el-icon-plus"></i>
+      </div>
+    </el-image>
 
     <el-dialog
       title="选择封面"
@@ -24,26 +32,43 @@
         <el-tab-pane
           label="上传"
           name="upload"
-        >上传页面
+        >
+          <input
+            type="file"
+            ref="imgFile"
+            @change="onFileChange"
+          >
+          <img
+            src=""
+            ref="imgUpload"
+            width="200px"
+          >
         </el-tab-pane>
       </el-tabs>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        <el-button
+          type="primary"
+          :disabled="coverPreparing"
+          @click="onCoverConfirm"
+        >确定
+        </el-button>
       </span>
     </el-dialog>
   </span>
 </template>
 
 <script>
+import { uploadImage } from '@/api/images/'
 
 export default {
   name: 'ArticleCover',
   components: {},
-  props: {},
+  props: ['value'],
   data: () => ({
     dialogVisible: false,
+    coverPreparing: true,
     activeTab: 'images'
   }),
   computed: {},
@@ -60,14 +85,32 @@ export default {
     },
 
     handleClick (tab, event) {
-      console.log(tab, event)
+      // console.log(tab, event)
+    },
+
+    onFileChange () {
+      const blob = window.URL.createObjectURL(this.$refs.imgFile.files[0])
+      this.$refs.imgUpload.src = blob
+      this.coverPreparing = false
+    },
+
+    onCoverConfirm () {
+      const file = this.$refs.imgFile.files[0]
+      const fd = new FormData()
+      fd.append('image', file)
+      uploadImage(fd).then(res => {
+        this.coverPreparing = true
+        this.dialogVisible = false
+
+        this.$emit('input', res.data.data.url)
+      })
     }
   }
 }
 </script>
 
 <style lang="less" scoped>
-  .el-icon-plus {
+  .upload-span {
     width: 100px;
     height: 100px;
     margin: 10px 10px 0 0;
@@ -79,7 +122,7 @@ export default {
     font-size: 24px;
     cursor: pointer;
   }
-  .el-icon-plus:hover {
+  .upload-span:hover {
       color: #409EFF;
       border-color: #409EFF;
     }

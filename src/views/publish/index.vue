@@ -37,8 +37,9 @@
           </el-radio-group>
           <div v-if="form.cover.type > 0">
             <article-cover
-              v-for="cover in form.cover.type"
+              v-for="(cover, i) in form.cover.type"
               :key="cover"
+              v-model="form.cover.images[i]"
             >
             </article-cover>
           </div>
@@ -199,9 +200,20 @@ export default {
       })
     },
 
+    onImageSelected (index, url) {
+      this.form.cover.images[index] = url
+    },
+
     onSubmit (isDraft = false) {
       this.$refs.pubForm.validate(valid => {
         if (!valid) return
+
+        // 如果是发布文章，那么封面数据的图片地址数组长度应该变更为实际图片的数量
+        if (this.form.cover.type > 0) {
+          this.form.cover.images.length = this.form.cover.type
+        } else {
+          this.form.cover.images.length = 0
+        }
 
         this.loading = true
 
