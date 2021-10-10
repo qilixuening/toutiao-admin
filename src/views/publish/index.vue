@@ -35,6 +35,14 @@
             <el-radio :label="0">无图</el-radio>
             <el-radio :label="-1">自动</el-radio>
           </el-radio-group>
+          <div v-if="form.cover.type > 0">
+            <article-cover
+              v-for="cover in form.cover.type"
+              :key="cover"
+            >
+            </article-cover>
+          </div>
+
         </el-form-item>
         <el-form-item label="频道" prop="channel_id">
           <el-select
@@ -75,6 +83,7 @@ import {
 } from '@/api/articles.js'
 
 import { uploadImage } from '@/api/images.js'
+import ArticleCover from './components/articleCover'
 
 import {
   ElementTiptap,
@@ -103,7 +112,8 @@ import 'element-tiptap/lib/index.css'
 export default {
   name: 'PublishIndex',
   components: {
-    'el-tiptap': ElementTiptap
+    'el-tiptap': ElementTiptap,
+    ArticleCover
   },
   props: {},
   data: () => ({
