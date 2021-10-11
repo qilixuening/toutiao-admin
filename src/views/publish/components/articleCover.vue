@@ -32,6 +32,7 @@
             ref="imageList"
             :isShowUpload="false"
             :isShowBar="false"
+            :ratio="2"
             @input="onSelected"
           >
           </image-list>

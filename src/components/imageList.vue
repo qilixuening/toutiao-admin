@@ -20,11 +20,11 @@
     <el-row :gutter="10">
       <el-col
         class="img-box"
-        :xs="12"
-        :sm="8"
-        :md="6"
-        :lg="4"
-        :xl="3"
+        :xs="12*ratio"
+        :sm="8*ratio"
+        :md="6*ratio"
+        :lg="4*ratio"
+        :xl="3*ratio"
         v-for="(img, index) in images"
         :key="img.id"
         @click.native="onSelectCover(index)"
@@ -72,7 +72,7 @@
       layout="prev, pager, next"
       background
       :total="totalCount"
-      :page-size="pageSize"
+      :page-size="pageSize/ratio"
       :disabled="loading"
       :current-page.sync="page"
       @current-change="onPageChange"
@@ -116,6 +116,10 @@ export default {
     isShowBar: {
       type: Boolean,
       default: true
+    },
+    ratio: {
+      type: Number,
+      default: 1
     }
   },
   data: () => ({
@@ -152,7 +156,7 @@ export default {
       getUserImages({
         collect: this.isFavorite,
         page,
-        per_page: this.pageSize
+        per_page: this.pageSize / this.ratio
       }).then(res => {
         const ret = res.data.data.results
         ret.forEach(img => {
@@ -217,12 +221,13 @@ export default {
 <style lang="less" scoped>
   .img-box {
     position: relative;
+    margin: 3px 0;
 
     .img-bar {
       height: 24px;
       background-color: rgba(0, 0, 0, 0.3);
       position: absolute;
-      bottom: 4px;
+      bottom: 3px;
       left: 5px;
       right: 5px;
       display: flex;
